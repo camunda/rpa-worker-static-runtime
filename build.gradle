@@ -49,14 +49,14 @@ tasks.register("installPipDependencies", Exec) {
 	dependsOn(prepareRequirementsFile)
 	
 	workingDir project.layout.buildDirectory
-	commandLine "venv/${binDir}/pip${exeSuffix}", 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
+	commandLine project.layout.buildDirectory.file("venv/${binDir}/pip${exeSuffix}").get(), 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
 }
 
 tasks.register("buildRuntime", Exec) {
 	dependsOn installPipDependencies
 
 	workingDir project.layout.buildDirectory
-	commandLine "venv/${binDir}/pyinstaller${exeSuffix}", file("robot.spec"), '--distpath', 'dist/runtime'
+	commandLine project.layout.buildDirectory.file("venv/${binDir}/pyinstaller${exeSuffix}").get(), file("robot.spec"), '--distpath', 'dist/runtime'
 }
 
 sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
@@ -96,10 +96,10 @@ publishing {
 				classifier "linux_amd64"
 				extension "jar"
 			}
-//			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-win32_amd64.jar")) {
-//				classifier "win32_amd64"
-//				extension "jar"
-//			}
+			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-win32_amd64.jar")) {
+				classifier "win32_amd64"
+				extension "jar"
+			}
 			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-darwin_amd64.jar")) {
 				classifier "darwin_amd64"
 				extension "jar"
