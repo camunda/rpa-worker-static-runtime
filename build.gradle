@@ -49,7 +49,7 @@ tasks.register("installPipDependencies", Exec) {
 	dependsOn(prepareRequirementsFile)
 	
 	workingDir project.layout.buildDirectory
-	commandLine "venv/${binDir}/pip${exeSuffix}}", 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
+	commandLine "venv/${binDir}/pip${exeSuffix}", 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
 }
 
 tasks.register("buildRuntime", Exec) {
