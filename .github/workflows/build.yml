@@ -1,0 +1,159 @@
+name: Build
+
+on:
+  push: {}
+  
+jobs:
+  linux_amd64:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+        with:
+          add-job-summary: 'on-failure'
+
+      - name: Build
+        run: |
+          ./gradlew setVersion
+          ./gradlew -PnativePlatform=linux -PnativeArch=amd64 build
+          
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-linux-amd64
+          path: build/libs/*.jar
+          retention-days: 1
+
+#  win32_amd64:
+#    runs-on: windows-2025
+#    permissions:
+#      contents: read
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#          fetch-tags: true
+#          
+#      - uses: actions/setup-python@v5
+#        with:
+#          python-version: '3.12'
+#
+#      - name: Build
+#        run: |
+#          ./gradlew setVersion
+#          ./gradlew -PnativePlatform=win32 -PnativeArch=amd64 build
+#
+#      - name: Upload JAR
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: jar-win32-amd64
+#          path: build/libs/*.jar
+#          retention-days: 1
+
+  darwin_amd64:
+    runs-on: macos-13
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Build
+        run: |
+          ./gradlew setVersion
+          ./gradlew -PnativePlatform=darwin -PnativeArch=amd64 build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-darwin-amd64
+          path: build/libs/*.jar
+          retention-days: 1
+
+  darwin_aarch64:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build
+        run: |
+          ./gradlew setVersion
+          ./gradlew -PnativePlatform=darwin -PnativeArch=aarch64 build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-darwin-aarch64
+          path: build/libs/*.jar
+          retention-days: 1
+          
+  publish:
+    if: github.ref_type == 'tag'
+    needs:
+      - linux_amd64
+#      - win32_amd64
+      - darwin_amd64
+      - darwin_aarch64
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+        with:
+          add-job-summary: 'on-failure'
+          
+      - name: Download Artefacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: build/libs/
+
+      - name: Build
+        run: |
+          ls
+          ls build ||:
+          ls build/libs ||:
+          ./gradlew setVersion
+          ./gradlew publish
+        
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
