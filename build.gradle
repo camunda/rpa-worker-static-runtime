@@ -1,0 +1,97 @@
+import autoversion.AutoVersionPlugin
+import groovy.text.GStringTemplateEngine
+import groovy.text.TemplateEngine
+
+plugins {
+	id 'java'
+	id 'maven-publish'
+}
+
+apply plugin: AutoVersionPlugin
+
+group 'io.camunda.rpa'
+
+tasks.register("createPythonEnvironment", Exec) {
+	outputs.dir(project.layout.buildDirectory.dir("venv"))
+	
+	workingDir project.layout.buildDirectory
+	commandLine 'python3', '-m', 'venv', 'venv'
+}
+
+tasks.register("prepareRequirementsFile") {
+	dependsOn(createPythonEnvironment)
+	inputs.file("requirements.txt")
+	outputs.file(project.layout.buildDirectory.file("requirements.txt"))
+	
+	String camundaRpaVersion = libs.versions.camunda.rpa.get()
+	String camundaUtilsVersion = libs.versions.camunda.utils.get()
+	java.nio.file.Path out = project.layout.buildDirectory.file("requirements.txt").get().getAsFile().toPath()
+
+	doLast {
+		TemplateEngine te = new GStringTemplateEngine()
+
+		Writable cooked = te.createTemplate(new File("requirements.txt")).make([
+				camundaRpaVersion: camundaRpaVersion,
+				camundaUtilsVersion: camundaUtilsVersion
+		])
+		out.withWriter { w -> cooked.writeTo(w) }
+	}
+}
+
+tasks.register("installPipDependencies", Exec) {
+	dependsOn(prepareRequirementsFile)
+	
+	workingDir project.layout.buildDirectory
+	commandLine 'venv/bin/pip', 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
+}
+
+tasks.register("buildRuntime", Exec) {
+	dependsOn installPipDependencies
+
+	workingDir project.layout.buildDirectory
+	commandLine 'venv/bin/pyinstaller', file("robot.spec"), '--distpath', 'dist/runtime'
+}
+
+sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
+
+processResources.dependsOn(buildRuntime)
+
+jar {
+	if(project.hasProperty("nativePlatform"))
+		archiveClassifier = "${project.properties.nativePlatform}"
+	if (project.hasProperty("nativeArch"))
+		archiveClassifier = "${archiveClassifier.get()}_${project.properties.nativeArch}"
+}
+
+publishing {
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/camunda/rpa-worker-static-runtime")
+			credentials {
+				username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+				password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+			}
+		}
+	}
+	publications {
+		maven(MavenPublication) {
+			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-linux_amd64.jar")) {
+				classifier "linux_amd64"
+				extension "jar"
+			}
+			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-win32_amd64.jar")) {
+				classifier "win32_amd64"
+				extension "jar"
+			}
+			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-darwin_amd64.jar")) {
+				classifier "darwin_amd64"
+				extension "jar"
+			}
+			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-darwin_aarch64.jar")) {
+				classifier "darwin_amd64"
+				extension "jar"
+			}
+		}
+	}
+}
