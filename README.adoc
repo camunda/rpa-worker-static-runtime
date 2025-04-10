@@ -1,0 +1,27 @@
+= RPA Worker Static Runtime
+
+Builds a statically linked Python environment including interpreter and requirements 
+into a single binary file. This is then published as a JAR to the package registry 
+to be consumed by the https://github.com/camunda/rpa-worker[RPA Worker].
+
+== Coordinates
+
+[source,groovy]
+----
+repositories {
+	maven {
+		url "https://maven.pkg.github.com/camunda/rpa-worker-static-runtime"
+	}
+}
+
+dependencies {
+	runtimeOnly group: 'io.camunda.rpa', name: 'rpa-worker-static-runtime', version: '<version>', classifier: '<classifier>'
+}
+----
+
+Where `<version>` is the required version, and `<classifier>` is one of:
+
+* linux_amd64
+* win32_amd64
+* darwin_amd64
+* darwin_aarch64
