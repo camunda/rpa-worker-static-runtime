@@ -63,6 +63,15 @@ sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
 
 processResources.dependsOn(buildRuntime)
 
+tasks.register("testRuntime", Exec) {
+	dependsOn buildRuntime
+
+	workingDir project.layout.projectDirectory
+	commandLine project.layout.buildDirectory.file('dist/runtime/robot').get(), '--dryrun', 'test.robot'
+}
+
+check.dependsOn(testRuntime)
+
 jar {
 	if(project.hasProperty("nativePlatform"))
 		archiveClassifier = "${project.properties.nativePlatform}"

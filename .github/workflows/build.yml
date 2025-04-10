@@ -26,7 +26,7 @@ jobs:
       - name: Build
         run: |
           ./gradlew setVersion
-          ./gradlew -PnativePlatform=linux -PnativeArch=amd64 jar
+          ./gradlew -PnativePlatform=linux -PnativeArch=amd64 build
           
       - name: Upload JAR
         uses: actions/upload-artifact@v4
@@ -53,7 +53,7 @@ jobs:
 #      - name: Build
 #        run: |
 #          ./gradlew setVersion
-#          ./gradlew -PnativePlatform=win32 -PnativeArch=amd64 jar
+#          ./gradlew -PnativePlatform=win32 -PnativeArch=amd64 build
 #
 #      - name: Upload JAR
 #        uses: actions/upload-artifact@v4
@@ -80,7 +80,7 @@ jobs:
       - name: Build
         run: |
           ./gradlew setVersion
-          ./gradlew -PnativePlatform=darwin -PnativeArch=amd64 jar
+          ./gradlew -PnativePlatform=darwin -PnativeArch=amd64 build
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
@@ -107,7 +107,7 @@ jobs:
       - name: Build
         run: |
           ./gradlew setVersion
-          ./gradlew -PnativePlatform=darwin -PnativeArch=aarch64 jar
+          ./gradlew -PnativePlatform=darwin -PnativeArch=aarch64 build
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
