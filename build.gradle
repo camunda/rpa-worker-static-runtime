@@ -96,7 +96,7 @@ publishing {
 				extension "jar"
 			}
 			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-darwin_aarch64.jar")) {
-				classifier "darwin_amd64"
+				classifier "darwin_aarch64"
 				extension "jar"
 			}
 		}
