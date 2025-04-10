@@ -127,6 +127,8 @@ jobs:
     
     permissions:
       contents: read
+      packages: write
+      
     steps:
       - uses: actions/checkout@v4
         with:
@@ -151,4 +153,7 @@ jobs:
           ls build/libs ||:
           ./gradlew setVersion
           ./gradlew publish
+        
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

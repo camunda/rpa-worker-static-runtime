@@ -76,8 +76,8 @@ publishing {
 			name = "GitHubPackages"
 			url = uri("https://maven.pkg.github.com/camunda/rpa-worker-static-runtime")
 			credentials {
-				username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-				password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+				username = System.getenv("GITHUB_ACTOR")
+				password = System.getenv("GITHUB_TOKEN")
 			}
 		}
 	}
@@ -87,10 +87,10 @@ publishing {
 				classifier "linux_amd64"
 				extension "jar"
 			}
-			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-win32_amd64.jar")) {
-				classifier "win32_amd64"
-				extension "jar"
-			}
+//			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-win32_amd64.jar")) {
+//				classifier "win32_amd64"
+//				extension "jar"
+//			}
 			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-darwin_amd64.jar")) {
 				classifier "darwin_amd64"
 				extension "jar"
