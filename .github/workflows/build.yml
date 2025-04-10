@@ -1,0 +1,89 @@
+name: Build
+
+on:
+  push: {}
+  
+jobs:
+  linux_amd64:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Test
+        run: |
+          python --version ||:
+          python3 --version ||:
+          java -version ||:
+
+  win32_amd64:
+    runs-on: windows-2025
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Test
+        run: |
+          python --version ||:
+          python3 --version ||:
+          java -version ||:
+
+  darwin_amd64:
+    runs-on: macos-13
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Test
+        run: |
+          python --version ||:
+          python3 --version ||:
+          java -version ||:
+
+
+  darwin_aarch64:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Test
+        run: |
+          python --version ||:
+          python3 --version ||:
+          java -version ||:
