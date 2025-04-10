@@ -38,18 +38,22 @@ tasks.register("prepareRequirementsFile") {
 	}
 }
 
+String binDir = project.hasProperty("nativePlatform") && project.property("nativePlatform") == "win32"
+		? "Scripts"
+		: "bin"
+
 tasks.register("installPipDependencies", Exec) {
 	dependsOn(prepareRequirementsFile)
 	
 	workingDir project.layout.buildDirectory
-	commandLine 'venv/bin/pip', 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
+	commandLine "venv/${binDir}/pip", 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
 }
 
 tasks.register("buildRuntime", Exec) {
 	dependsOn installPipDependencies
 
 	workingDir project.layout.buildDirectory
-	commandLine 'venv/bin/pyinstaller', file("robot.spec"), '--distpath', 'dist/runtime'
+	commandLine "venv/${binDir}/pyinstaller", file("robot.spec"), '--distpath', 'dist/runtime'
 }
 
 sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
