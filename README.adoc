@@ -1,7 +1,7 @@
 = RPA Worker Static Runtime
 
 Builds a statically linked Python environment including interpreter and requirements 
-into a single binary file. This is then published as a JAR to the package registry 
+into a single binary file. This is then published as a JAR to Artifactory 
 to be consumed by the https://github.com/camunda/rpa-worker[RPA Worker].
 
 == Coordinates
@@ -10,7 +10,7 @@ to be consumed by the https://github.com/camunda/rpa-worker[RPA Worker].
 ----
 repositories {
 	maven {
-		url "https://maven.pkg.github.com/camunda/rpa-worker-static-runtime"
+		url "https://artifacts.camunda.com/artifactory/public"
 	}
 }
 
