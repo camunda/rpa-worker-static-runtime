@@ -145,7 +145,19 @@ jobs:
         with:
           merge-multiple: true
           path: build/libs/
-
+          
+      - name: Import Secrets for Artifactory
+        id: secrets
+        uses: hashicorp/vault-action@v2.5.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/rpa/ci/artifactory-gh-publish username | ARTIFACTORY_USERNAME ;
+            secret/data/products/rpa/ci/artifactory-gh-publish password | ARTIFACTORY_PASSWORD ;
+      
       - name: Build
         run: |
           ./gradlew setVersion
