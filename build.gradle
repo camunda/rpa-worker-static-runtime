@@ -82,11 +82,11 @@ jar {
 publishing {
 	repositories {
 		maven {
-			name = "GitHubPackages"
-			url = uri("https://maven.pkg.github.com/camunda/rpa-worker-static-runtime")
+			name = "Artifactory"
+			url = "https://artifacts.camunda.com/artifactory/camunda-rpa"
 			credentials {
-				username = System.getenv("GITHUB_ACTOR")
-				password = System.getenv("GITHUB_TOKEN")
+				username = System.getenv("ARTIFACTORY_USERNAME")
+				password = System.getenv("ARTIFACTORY_PASSWORD")
 			}
 		}
 	}
