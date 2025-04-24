@@ -96,6 +96,10 @@ publishing {
 				classifier "linux_amd64"
 				extension "jar"
 			}
+			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-linux_aarch64.jar")) {
+				classifier "linux_aarch64"
+				extension "jar"
+			}
 			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-win32_amd64.jar")) {
 				classifier "win32_amd64"
 				extension "jar"
