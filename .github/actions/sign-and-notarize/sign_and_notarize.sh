@@ -63,6 +63,8 @@ sign_macho_in_folder() {
       fi
       if file -b "$candidate" | grep -q "Mach-O"; then
         echo "    Signing Mach-O: $candidate"
+        pwd
+        ls
         if codesign --verbose=4 --force --options runtime --timestamp --sign "$CERT_NAME" "$candidate"; then
           ((signed_count++))
         else
@@ -98,7 +100,11 @@ echo "Created: $SIGNED_ZIP_PATH"
 # D) Notarize signed.zip
 ##############################################
 echo "=== Step D: Notarizing signed.zip ==="
+pwd
+ls
 cd "$(dirname "$SIGN_DIR")"
+pwd 
+ls
 xcrun notarytool submit "$SIGNED_ZIP_PATH" \
   --apple-id "$APPLE_ID" \
   --password "$APPLE_PASS" \
@@ -108,6 +114,8 @@ xcrun notarytool submit "$SIGNED_ZIP_PATH" \
 xcrun stapler staple -v runtime/robot
 
 rm $SIGNED_ZIP_PATH
+
+
 
 echo "Notarization succeeded (status: Accepted)"
 
