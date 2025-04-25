@@ -103,5 +103,10 @@ xcrun notarytool submit "$SIGNED_ZIP_PATH" \
   --password "$APPLE_PASS" \
   --team-id "$APPLE_TEAM" \
   --wait
+
+xcrun stapler staple robot*
+
+rm $SIGNED_ZIP_PATH
+
 echo "Notarization succeeded (status: Accepted)"
 
