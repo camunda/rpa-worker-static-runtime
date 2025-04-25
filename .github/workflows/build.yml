@@ -162,7 +162,7 @@ jobs:
             secret/data/products/distribution/ci APPLE_TEAM_ID;
             secret/data/products/distribution/ci APPLE_COMMON_NAME;
             
-      - name: Sign and notarize
+      - name: Sign
         uses: ./.github/actions/sign-and-notarize
         with:
           p12-base64: ${{ steps.secrets.outputs.APPLE_CERTIFICATE }}
@@ -202,8 +202,39 @@ jobs:
       - name: Build
         run: |
           ./gradlew setVersion
-          ./gradlew -PnativePlatform=darwin -PnativeArch=aarch64 build
+          ./gradlew -PnativePlatform=darwin -PnativeArch=aarch64 check
+          
+      - name: Import Secrets
+        id: secrets
+        uses: hashicorp/vault-action@7709c609789c5e27b757a85817483caadbb5939a # v3.3.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/distribution/ci APPLE_CERTIFICATE;
+            secret/data/products/distribution/ci APPLE_CERTIFICATE_PASSWORD;
+            secret/data/products/distribution/ci APPLE_DEVELOPER_ID;
+            secret/data/products/distribution/ci APPLE_DEVELOPER_PASSWORD;
+            secret/data/products/distribution/ci APPLE_TEAM_ID;
+            secret/data/products/distribution/ci APPLE_COMMON_NAME;
 
+      - name: Sign
+        uses: ./.github/actions/sign-and-notarize
+        with:
+          p12-base64: ${{ steps.secrets.outputs.APPLE_CERTIFICATE }}
+          p12-password: ${{ steps.secrets.outputs.APPLE_CERTIFICATE_PASSWORD }}
+          developer-id-cert-name: ${{ steps.secrets.outputs.APPLE_DEVELOPER_ID }}
+          apple-id: ${{ steps.secrets.outputs.APPLE_DEVELOPER_ID }}
+          app-password: ${{ steps.secrets.outputs.APPLE_DEVELOPER_PASSWORD }}
+          team-id: ${{ steps.secrets.outputs.APPLE_TEAM_ID }}
+          path: build/dist/runtime/
+          
+      - name: Assemble
+        run: |
+          ./gradlew -PnativePlatform=win32 -PnativeArch=aarch64 assemble
+      
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:

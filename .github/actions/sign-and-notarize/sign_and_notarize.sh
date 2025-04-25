@@ -63,8 +63,6 @@ sign_macho_in_folder() {
       fi
       if file -b "$candidate" | grep -q "Mach-O"; then
         echo "    Signing Mach-O: $candidate"
-        pwd
-        ls
         if codesign --verbose=4 --force --options runtime --timestamp --sign "$CERT_NAME" "$candidate"; then
           ((signed_count++))
         else
