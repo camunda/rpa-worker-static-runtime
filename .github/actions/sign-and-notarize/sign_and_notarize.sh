@@ -84,38 +84,3 @@ sign_macho_in_folder() {
 ##############################################
 echo "=== Step B: Signing binary content ==="
 sign_macho_in_folder "$SIGN_DIR"
-
-##############################################
-# C) Create signed.zip with ditto
-##############################################
-echo "=== Step C: Creating signed.zip with ditto (excluding removed items) ==="
-(
-  cd "$(dirname "$SIGN_DIR")"
-  /usr/bin/ditto -c -k --keepParent "$(basename "$SIGN_DIR")" signed.zip
-)
-SIGNED_ZIP_PATH="$(cd "$(dirname "$SIGN_DIR")" && pwd -P)/signed.zip"
-echo "Created: $SIGNED_ZIP_PATH"
-
-##############################################
-# D) Notarize signed.zip
-##############################################
-echo "=== Step D: Notarizing signed.zip ==="
-pwd
-ls
-cd "$(dirname "$SIGN_DIR")"
-pwd 
-ls
-xcrun notarytool submit "$SIGNED_ZIP_PATH" \
-  --apple-id "$APPLE_ID" \
-  --password "$APPLE_PASS" \
-  --team-id "$APPLE_TEAM" \
-  --wait
-
-xcrun stapler staple -v runtime/robot
-
-rm $SIGNED_ZIP_PATH
-
-
-
-echo "Notarization succeeded (status: Accepted)"
-
