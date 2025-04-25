@@ -61,8 +61,6 @@ tasks.register("buildRuntime", Exec) {
 
 sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
 
-processResources.dependsOn(buildRuntime)
-
 tasks.register("testRuntime", Exec) {
 	dependsOn buildRuntime
 
