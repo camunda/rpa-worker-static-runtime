@@ -34,6 +34,37 @@ jobs:
           name: jar-linux-amd64
           path: build/libs/*.jar
           retention-days: 1
+          
+  linux_aarch64:
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+        with:
+          add-job-summary: 'on-failure'
+
+      - name: Build
+        run: |
+          ./gradlew setVersion
+          ./gradlew -PnativePlatform=linux -PnativeArch=aarch64 build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-linux-aarch64
+          path: build/libs/*.jar
+          retention-days: 1
 
   win32_amd64:
     runs-on: windows-2025
@@ -120,6 +151,7 @@ jobs:
     if: github.ref_type == 'tag'
     needs:
       - linux_amd64
+      - linux_aarch64
       - win32_amd64
       - darwin_amd64
       - darwin_aarch64
