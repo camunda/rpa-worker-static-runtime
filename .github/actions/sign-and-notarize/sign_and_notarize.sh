@@ -98,6 +98,7 @@ echo "Created: $SIGNED_ZIP_PATH"
 # D) Notarize signed.zip
 ##############################################
 echo "=== Step D: Notarizing signed.zip ==="
+cd "$(dirname "$SIGN_DIR")"
 xcrun notarytool submit "$SIGNED_ZIP_PATH" \
   --apple-id "$APPLE_ID" \
   --password "$APPLE_PASS" \
