@@ -105,7 +105,7 @@ xcrun notarytool submit "$SIGNED_ZIP_PATH" \
   --team-id "$APPLE_TEAM" \
   --wait
 
-xcrun stapler staple robot*
+xcrun stapler staple runtime/robot
 
 rm $SIGNED_ZIP_PATH
 
