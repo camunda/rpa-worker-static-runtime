@@ -84,15 +84,48 @@ jobs:
       - name: Build
         run: |
           ./gradlew setVersion
-          ./gradlew -PnativePlatform=win32 -PnativeArch=amd64 build
+          ./gradlew -PnativePlatform=win32 -PnativeArch=amd64 check
 
+      - name: Import Secrets for signing
+        id: secrets
+        uses: hashicorp/vault-action@v2.5.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/rpa/ci/azure CERT_PROFILE_NAME  | AZURE_CERT_PROFILE_NAME ;
+            secret/data/products/rpa/ci/azure CLIENT_ID          | AZURE_CLIENT_ID ;
+            secret/data/products/rpa/ci/azure CLIENT_SECRET      | AZURE_CLIENT_SECRET ;
+            secret/data/products/rpa/ci/azure CODE_SIGNING_NAME  | AZURE_CODE_SIGNING_NAME ;
+            secret/data/products/rpa/ci/azure SIGNING_ENDPOINT   | AZURE_ENDPOINT ;
+            secret/data/products/rpa/ci/azure TENANT_ID          | AZURE_TENANT_ID ;
+            
+      - name: Azure Trusted Signing
+        uses: azure/trusted-signing-action@v0.5.1
+        with:
+          azure-tenant-id: ${{ steps.secrets.outputs.AZURE_TENANT_ID }}
+          azure-client-id: ${{ steps.secrets.outputs.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ steps.secrets.outputs.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ steps.secrets.outputs.AZURE_ENDPOINT }}
+          trusted-signing-account-name: ${{ steps.secrets.outputs.AZURE_CODE_SIGNING_NAME }}
+          certificate-profile-name: ${{ steps.secrets.outputs.AZURE_CERT_PROFILE_NAME }}
+          
+          files-folder: build/dist/runtime/
+          files-folder-filter: exe
+          
+      - name: Assemble
+        run: |
+          ./gradlew -PnativePlatform=win32 -PnativeArch=amd64 assemble
+      
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: jar-win32-amd64
           path: build/libs/*.jar
           retention-days: 1
-
+  
   darwin_amd64:
     runs-on: macos-13
     permissions:
