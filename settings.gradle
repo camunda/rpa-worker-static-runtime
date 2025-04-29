@@ -1,1 +1,4 @@
 rootProject.name = 'rpa-worker-static-runtime'
+
+include ":rpa-worker-python-requirements"
+include ":rpa-worker-static-runtime"

@@ -37,7 +37,6 @@ out/
 .vscode/
 
 tags
-**/python*/
 **/scripts/
 **/scripts_ftest/
 application-my-c8-cluster.properties
@@ -52,3 +51,6 @@ rpa-worker-application/src/functionalTest/resources/python/**
 !rpa-worker-application/src/functionalTest/resources/python/requirements-ftest.txt
 !rpa-worker-application/src/main/java/io/camunda/rpa/worker/python/
 !rpa-worker-e2e-tests/src/test/groovy/io/camunda/rpa/worker/python/
+
+*.html
+*.xml

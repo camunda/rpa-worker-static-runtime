@@ -1,0 +1,4 @@
+camunda-utils ${camundaUtilsVersion}
+camunda-rpa ${camundaRpaVersion}
+PyYAML
+pyinstaller
