@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jar-linux-amd64
-          path: build/libs/*.jar
+          path: rpa-worker-static-runtime/build/libs/*.jar
           retention-days: 1
           
   linux_aarch64:
@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jar-linux-aarch64
-          path: build/libs/*.jar
+          path: rpa-worker-static-runtime/build/libs/*.jar
           retention-days: 1
 
   win32_amd64:
@@ -112,7 +112,7 @@ jobs:
           trusted-signing-account-name: ${{ steps.secrets.outputs.AZURE_CODE_SIGNING_NAME }}
           certificate-profile-name: ${{ steps.secrets.outputs.AZURE_CERT_PROFILE_NAME }}
           
-          files-folder: build/dist/runtime/
+          files-folder: rpa-worker-static-runtime/build/dist/runtime/
           files-folder-filter: exe
           
       - name: Assemble
@@ -123,7 +123,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jar-win32-amd64
-          path: build/libs/*.jar
+          path: rpa-worker-static-runtime/build/libs/*.jar
           retention-days: 1
   
   darwin_amd64:
@@ -150,7 +150,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jar-darwin-amd64
-          path: build/libs/*.jar
+          path: rpa-worker-static-runtime/build/libs/*.jar
           retention-days: 1
 
   darwin_aarch64:
@@ -177,7 +177,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jar-darwin-aarch64
-          path: build/libs/*.jar
+          path: rpa-worker-static-runtime/build/libs/*.jar
           retention-days: 1
           
   publish:
@@ -209,7 +209,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-          path: build/libs/
+          path: rpa-worker-static-runtime/build/libs/
           
       - name: Import Secrets for Artifactory
         id: secrets
