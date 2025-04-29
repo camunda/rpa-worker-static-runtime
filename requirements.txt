@@ -1,4 +1,0 @@
-camunda-utils @ https://github.com/camunda/rpa-python-libraries/releases/download/camunda-utils-v${camundaUtilsVersion}/camunda_utils-${camundaUtilsVersion}-py3-none-any.whl
-camunda-rpa @ https://github.com/camunda/rpa-python-libraries/releases/download/camunda-rpa-v${camundaRpaVersion}/camunda_rpa-${camundaRpaVersion}-py3-none-any.whl
-PyYAML
-pyinstaller

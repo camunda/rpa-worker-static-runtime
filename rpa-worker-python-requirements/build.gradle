@@ -1,0 +1,34 @@
+import groovy.text.GStringTemplateEngine
+import groovy.text.TemplateEngine
+
+tasks.register("prepareRequirementsFile") {
+	RegularFile sourceFile = project.layout.projectDirectory.file("src/main/resources/python/requirements.txt")
+	RegularFile destFile = project.layout.buildDirectory.file("resources/main/python/requirements.txt").get()
+	
+	inputs.file(sourceFile)
+	outputs.file(destFile)
+
+	java.nio.file.Path out = destFile.asFile.toPath()
+
+	doLast {
+		TemplateEngine te = new GStringTemplateEngine()
+
+		Writable cooked = te.createTemplate(sourceFile.asFile).make([
+				camundaRpaVersion  : camundaRpaVersion,
+				camundaUtilsVersion: camundaUtilsVersion
+		])
+		out.withWriter { w -> cooked.writeTo(w) }
+	}
+}
+
+processResources.finalizedBy(prepareRequirementsFile)
+jar.dependsOn(prepareRequirementsFile)
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			from components.java
+		}
+	}
+}
+

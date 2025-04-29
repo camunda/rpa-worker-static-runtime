@@ -1,116 +1,23 @@
 import autoversion.AutoVersionPlugin
-import groovy.text.GStringTemplateEngine
-import groovy.text.TemplateEngine
-
-plugins {
-	id 'java'
-	id 'maven-publish'
-}
 
 apply plugin: AutoVersionPlugin
 
-group 'io.camunda.rpa'
-
-tasks.register("createPythonEnvironment", Exec) {
-	outputs.dir(project.layout.buildDirectory.dir("venv"))
+subprojects {
 	
-	workingDir project.layout.buildDirectory
-	commandLine 'python3', '-m', 'venv', 'venv'
-}
+	apply plugin: 'java'
+	apply plugin: 'maven-publish'
 
-tasks.register("prepareRequirementsFile") {
-	dependsOn(createPythonEnvironment)
-	inputs.file("requirements.txt")
-	outputs.file(project.layout.buildDirectory.file("requirements.txt"))
-	
-	String camundaRpaVersion = libs.versions.camunda.rpa.get()
-	String camundaUtilsVersion = libs.versions.camunda.utils.get()
-	java.nio.file.Path out = project.layout.buildDirectory.file("requirements.txt").get().getAsFile().toPath()
+	group 'io.camunda.rpa'
 
-	doLast {
-		TemplateEngine te = new GStringTemplateEngine()
-
-		Writable cooked = te.createTemplate(new File("requirements.txt")).make([
-				camundaRpaVersion: camundaRpaVersion,
-				camundaUtilsVersion: camundaUtilsVersion
-		])
-		out.withWriter { w -> cooked.writeTo(w) }
-	}
-}
-
-String binDir = project.hasProperty("nativePlatform") && project.property("nativePlatform") == "win32"
-		? "Scripts"
-		: "bin"
-String exeSuffix = project.hasProperty("nativePlatform") && project.property("nativePlatform") == "win32"
-		? ".exe"
-		: ""
-
-tasks.register("installPipDependencies", Exec) {
-	dependsOn(prepareRequirementsFile)
-	
-	workingDir project.layout.buildDirectory
-	commandLine project.layout.buildDirectory.file("venv/${binDir}/pip${exeSuffix}").get(), 'install', '-r', prepareRequirementsFile.outputs.files.getSingleFile()
-}
-
-tasks.register("buildRuntime", Exec) {
-	dependsOn installPipDependencies
-
-	workingDir project.layout.buildDirectory
-	commandLine project.layout.buildDirectory.file("venv/${binDir}/pyinstaller${exeSuffix}").get(), file("robot.spec"), '--distpath', 'dist/runtime'
-}
-
-sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
-
-processResources.mustRunAfter(buildRuntime)
-
-tasks.register("testRuntime", Exec) {
-	dependsOn buildRuntime
-
-	workingDir project.layout.projectDirectory
-	commandLine project.layout.buildDirectory.file('dist/runtime/robot').get(), '--dryrun', 'test.robot'
-}
-
-check.dependsOn(testRuntime)
-
-jar {
-	if(project.hasProperty("nativePlatform"))
-		archiveClassifier = "${project.properties.nativePlatform}"
-	if (project.hasProperty("nativeArch"))
-		archiveClassifier = "${archiveClassifier.get()}_${project.properties.nativeArch}"
-}
-
-publishing {
-	repositories {
-		maven {
-			name = "Artifactory"
-			url = "https://artifacts.camunda.com/artifactory/camunda-rpa"
-			credentials {
-				username = System.getenv("ARTIFACTORY_USERNAME")
-				password = System.getenv("ARTIFACTORY_PASSWORD")
-			}
-		}
-	}
-	publications {
-		maven(MavenPublication) {
-			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-linux_amd64.jar")) {
-				classifier "linux_amd64"
-				extension "jar"
-			}
-			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-linux_aarch64.jar")) {
-				classifier "linux_aarch64"
-				extension "jar"
-			}
-			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-win32_amd64.jar")) {
-				classifier "win32_amd64"
-				extension "jar"
-			}
-			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-darwin_amd64.jar")) {
-				classifier "darwin_amd64"
-				extension "jar"
-			}
-			artifact(project.layout.buildDirectory.file("libs/rpa-worker-static-runtime-${project.version}-darwin_aarch64.jar")) {
-				classifier "darwin_aarch64"
-				extension "jar"
+	publishing {
+		repositories {
+			maven {
+				name = "Artifactory"
+				url = "https://artifacts.camunda.com/artifactory/camunda-rpa"
+				credentials {
+					username = System.getenv("ARTIFACTORY_USERNAME")
+					password = System.getenv("ARTIFACTORY_PASSWORD")
+				}
 			}
 		}
 	}
