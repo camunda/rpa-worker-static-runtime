@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 tasks.register("createPythonEnvironment", Exec) {
 	outputs.dir(project.layout.buildDirectory.dir("venv"))
 
@@ -13,6 +15,10 @@ String exeSuffix = project.hasProperty("nativePlatform") && project.property("na
 		: ""
 
 tasks.register("installPipDependencies", Exec) {
+	inputs.file(project(":rpa-worker-python-requirements").tasks.named("prepareRequirementsFile").get().outputs.files.singleFile)
+	outputs.dir(project.layout.buildDirectory.dir("venv"))
+
+	dependsOn(project(":rpa-worker-python-requirements").tasks.named("prepareRequirementsFile"))
 	dependsOn(project(":rpa-worker-python-requirements").tasks.named("processResources"))
 	dependsOn(createPythonEnvironment)
 	
@@ -25,22 +31,86 @@ tasks.register("installPipDependencies", Exec) {
 tasks.register("buildRuntime", Exec) {
 	dependsOn installPipDependencies
 
+	inputs.file(project(":rpa-worker-python-requirements").tasks.named("prepareRequirementsFile").get().outputs.files.singleFile)
+	inputs.dir(project.layout.buildDirectory.dir("venv"))
+	outputs.upToDateWhen {
+		project.layout.buildDirectory.dir("dist/runtime").get().asFile.exists()
+	}
+	
+
 	workingDir project.layout.buildDirectory
-	commandLine project.layout.buildDirectory.file("venv/${binDir}/pyinstaller${exeSuffix}").get(), file("robot.spec"), '--distpath', 'dist/runtime'
+	
+	List<?> cmd = [
+			project.layout.buildDirectory.file("venv/${binDir}/pyinstaller${exeSuffix}").get(),
+			"-D",
+			"-n", "robot",
+			"--collect-data", "robot",
+			"--distpath", "dist"
+	]
+	
+	["robot", "robot.libraries", "Camunda", "Camunda.Browser", "Camunda.Excel"].each {
+		cmd << "--collect-submodules"
+		cmd << it
+	}
+	
+	[
+			"Camunda.Archive",
+			"Camunda.Browser.Selenium",
+			"Camunda.Calendar",
+			"Camunda.Desktop",
+			"Camunda.Desktop.OperatingSystem",
+			"Camunda.Excel.Application",
+			"Camunda.Excel.Files",
+			"Camunda.FileSystem",
+			"Camunda.FTP",
+			"Camunda.HTTP",
+			"Camunda.Images",
+			"Camunda.JavaAccessBridge",
+			"Camunda.JSON",
+			"Camunda.MFA",
+			"Camunda.MSGraph",
+			"Camunda.Outlook.Application",
+			"Camunda.PDF",
+			"Camunda.SAP",
+			"Camunda.Tables",
+			"Camunda.Tasks",
+			"Camunda.Windows",
+			"Camunda.Word.Application",
+	].each {
+		cmd << "--hidden-import"
+		cmd << it
+	}
+	
+	cmd << file("src/robot_runner.py")
+	
+	commandLine(cmd)
+	
+	doLast {
+		java.nio.file.Path oldName = project.layout.buildDirectory.file("dist/robot").get().asFile.toPath()
+		java.nio.file.Path newName = oldName.resolveSibling("runtime")
+		Files.move(oldName, newName)
+	}
 }
-
-sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
-
-processResources.mustRunAfter(buildRuntime)
 
 tasks.register("testRuntime", Exec) {
 	dependsOn buildRuntime
 
+	outputs.dir(project.layout.buildDirectory.dir("test-results"))
+
 	workingDir project.layout.projectDirectory
-	commandLine project.layout.buildDirectory.file('dist/runtime/robot').get(), '--dryrun', 'test.robot'
+	commandLine project.layout.buildDirectory.file('dist/runtime/robot').get(), 
+			'-d', project.layout.buildDirectory.dir("test-results").get(),
+			'--dryrun', 'test.robot'
 }
 
-check.dependsOn(testRuntime)
+tasks.register("zipRuntime", Zip) {
+	dependsOn testRuntime
+	
+	archiveFileName = "runtime.zip"
+	from project.layout.buildDirectory.file('dist/')
+}
+sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("distributions"))
+processResources.dependsOn(zipRuntime)
 
 jar {
 	if (project.hasProperty("nativePlatform"))
