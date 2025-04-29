@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 tasks.register("createPythonEnvironment", Exec) {
 	outputs.dir(project.layout.buildDirectory.dir("venv"))
 
@@ -26,8 +28,63 @@ tasks.register("buildRuntime", Exec) {
 	dependsOn installPipDependencies
 
 	workingDir project.layout.buildDirectory
-	commandLine project.layout.buildDirectory.file("venv/${binDir}/pyinstaller${exeSuffix}").get(), file("robot.spec"), '--distpath', 'dist/runtime'
+	
+	List<?> cmd = [
+			project.layout.buildDirectory.file("venv/${binDir}/pyinstaller${exeSuffix}").get(),
+			"-D",
+			"-n", "robot",
+			"--collect-data", "robot",
+			"--distpath", "dist"
+	]
+	
+	["robot", "robot.libraries", "Camunda", "Camunda.Browser", "Camunda.Excel"].each {
+		cmd << "--collect-submodules"
+		cmd << it
+	}
+	
+	[
+			"Camunda.Archive",
+			"Camunda.Browser.Selenium",
+			"Camunda.Calendar",
+			"Camunda.Desktop",
+			"Camunda.Desktop.OperatingSystem",
+			"Camunda.Excel.Application",
+			"Camunda.Excel.Files",
+			"Camunda.FileSystem",
+			"Camunda.FTP",
+			"Camunda.HTTP",
+			"Camunda.Images",
+			"Camunda.JavaAccessBridge",
+			"Camunda.JSON",
+			"Camunda.MFA",
+			"Camunda.MSGraph",
+			"Camunda.Outlook.Application",
+			"Camunda.PDF",
+			"Camunda.SAP",
+			"Camunda.Tables",
+			"Camunda.Tasks",
+			"Camunda.Windows",
+			"Camunda.Word.Application",
+	].each {
+		cmd << "--hidden-import"
+		cmd << it
+	}
+	
+	cmd << file("src/robot_runner.py")
+	
+	commandLine(cmd)
 }
+
+tasks.register("fixDistDirName") {
+	buildRuntime.finalizedBy(it)
+	
+	doLast {
+		java.nio.file.Path oldName = project.layout.buildDirectory.file("dist/robot").get().asFile.toPath()
+		java.nio.file.Path newName = oldName.resolveSibling("runtime")
+		Files.move(oldName, newName)
+	}
+}
+
 
 sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
 
@@ -35,6 +92,7 @@ processResources.mustRunAfter(buildRuntime)
 
 tasks.register("testRuntime", Exec) {
 	dependsOn buildRuntime
+	dependsOn fixDistDirName
 
 	workingDir project.layout.projectDirectory
 	commandLine project.layout.buildDirectory.file('dist/runtime/robot').get(), '--dryrun', 'test.robot'
