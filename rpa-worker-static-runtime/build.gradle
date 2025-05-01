@@ -15,6 +15,10 @@ String exeSuffix = project.hasProperty("nativePlatform") && project.property("na
 		: ""
 
 tasks.register("installPipDependencies", Exec) {
+	inputs.file(project(":rpa-worker-python-requirements").tasks.named("prepareRequirementsFile").get().outputs.files.singleFile)
+	outputs.dir(project.layout.buildDirectory.dir("venv"))
+
+	dependsOn(project(":rpa-worker-python-requirements").tasks.named("prepareRequirementsFile"))
 	dependsOn(project(":rpa-worker-python-requirements").tasks.named("processResources"))
 	dependsOn(createPythonEnvironment)
 	
@@ -26,6 +30,8 @@ tasks.register("installPipDependencies", Exec) {
 
 tasks.register("buildRuntime", Exec) {
 	dependsOn installPipDependencies
+
+	outputs.dir(project.layout.buildDirectory.dir("dist/runtime"))
 
 	workingDir project.layout.buildDirectory
 	
@@ -73,30 +79,25 @@ tasks.register("buildRuntime", Exec) {
 	cmd << file("src/robot_runner.py")
 	
 	commandLine(cmd)
-}
-
-tasks.register("fixDistDirName") {
-	buildRuntime.finalizedBy(it)
 	
 	doLast {
 		java.nio.file.Path oldName = project.layout.buildDirectory.file("dist/robot").get().asFile.toPath()
 		java.nio.file.Path newName = oldName.resolveSibling("runtime")
+		Files.delete(newName)
 		Files.move(oldName, newName)
 	}
 }
 
-
-
-
 tasks.register("testRuntime", Exec) {
 	dependsOn buildRuntime
-	dependsOn fixDistDirName
+
+	outputs.dir(project.layout.buildDirectory.dir("test-results"))
 
 	workingDir project.layout.projectDirectory
-	commandLine project.layout.buildDirectory.file('dist/runtime/robot').get(), '--dryrun', 'test.robot'
+	commandLine project.layout.buildDirectory.file('dist/runtime/robot').get(), 
+			'-d', project.layout.buildDirectory.dir("test-results").get(),
+			'--dryrun', 'test.robot'
 }
-
-check.dependsOn(testRuntime)
 
 tasks.register("zipRuntime", Zip) {
 	dependsOn testRuntime
