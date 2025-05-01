@@ -1,5 +1,6 @@
 import autoversion.AutoVersionPlugin
 
+apply plugin: 'base'
 apply plugin: AutoVersionPlugin
 
 subprojects {
