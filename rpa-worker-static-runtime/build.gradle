@@ -86,9 +86,7 @@ tasks.register("fixDistDirName") {
 }
 
 
-sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("dist"))
 
-processResources.mustRunAfter(buildRuntime)
 
 tasks.register("testRuntime", Exec) {
 	dependsOn buildRuntime
@@ -99,6 +97,15 @@ tasks.register("testRuntime", Exec) {
 }
 
 check.dependsOn(testRuntime)
+
+tasks.register("zipRuntime", Zip) {
+	dependsOn testRuntime
+	
+	archiveFileName = "runtime.zip"
+	from project.layout.buildDirectory.file('dist/')
+}
+sourceSets.main.resources.srcDir(project.layout.buildDirectory.dir("distributions"))
+processResources.dependsOn(zipRuntime)
 
 jar {
 	if (project.hasProperty("nativePlatform"))
