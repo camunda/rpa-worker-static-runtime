@@ -31,7 +31,12 @@ tasks.register("installPipDependencies", Exec) {
 tasks.register("buildRuntime", Exec) {
 	dependsOn installPipDependencies
 
-	outputs.dir(project.layout.buildDirectory.dir("dist/runtime"))
+	inputs.file(project(":rpa-worker-python-requirements").tasks.named("prepareRequirementsFile").get().outputs.files.singleFile)
+	inputs.dir(project.layout.buildDirectory.dir("venv"))
+	outputs.upToDateWhen {
+		project.layout.buildDirectory.dir("dist/runtime").get().asFile.exists()
+	}
+	
 
 	workingDir project.layout.buildDirectory
 	
@@ -83,7 +88,6 @@ tasks.register("buildRuntime", Exec) {
 	doLast {
 		java.nio.file.Path oldName = project.layout.buildDirectory.file("dist/robot").get().asFile.toPath()
 		java.nio.file.Path newName = oldName.resolveSibling("runtime")
-		Files.delete(newName)
 		Files.move(oldName, newName)
 	}
 }
