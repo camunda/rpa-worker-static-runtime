@@ -70,6 +70,7 @@ jobs:
     runs-on: windows-2025
     permissions:
       contents: read
+      id-token: write  # mint GitHub OIDC token for Vault JWT auth
 
     steps:
       - uses: actions/checkout@v4
@@ -88,12 +89,13 @@ jobs:
 
       - name: Import Secrets for signing
         id: secrets
-        uses: hashicorp/vault-action@v2.5.0
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc  # v4.0.0
         with:
           url: ${{ secrets.VAULT_ADDR }}
-          method: approle
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          method: jwt
+          role: ${{ secrets.VAULT_JWT_ROLE }}
+          path: ${{ secrets.VAULT_JWT_PATH }}
+          jwtGithubAudience: ${{ secrets.VAULT_JWT_AUDIENCE }}
           secrets: |
             secret/data/products/rpa/ci/azure CERT_PROFILE_NAME  | AZURE_CERT_PROFILE_NAME ;
             secret/data/products/rpa/ci/azure CLIENT_ID          | AZURE_CLIENT_ID ;
@@ -193,6 +195,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write  # mint GitHub OIDC token for Vault JWT auth
       
     steps:
       - uses: actions/checkout@v4
@@ -213,12 +216,13 @@ jobs:
           
       - name: Import Secrets for Artifactory
         id: secrets
-        uses: hashicorp/vault-action@v2.5.0
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc  # v4.0.0
         with:
           url: ${{ secrets.VAULT_ADDR }}
-          method: approle
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          method: jwt
+          role: ${{ secrets.VAULT_JWT_ROLE }}
+          path: ${{ secrets.VAULT_JWT_PATH }}
+          jwtGithubAudience: ${{ secrets.VAULT_JWT_AUDIENCE }}
           secrets: |
             secret/data/products/rpa/ci/artifactory-gh-publish username | ARTIFACTORY_USERNAME ;
             secret/data/products/rpa/ci/artifactory-gh-publish password | ARTIFACTORY_PASSWORD ;
