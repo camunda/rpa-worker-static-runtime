@@ -42,7 +42,7 @@ escalation:
       paths: ["rpa-worker-python-requirements/*"]
     - reason: runtime bundle and versioning
       paths: ["*build.gradle", "settings.gradle", "gradle.properties", "buildSrc/*", "gradle/*", "gradlew*"]
-    - reason: signing, secrets and publishing
+    - reason: signing/secrets/publishing
       paths: [".github/*"]
 
 notifications:
