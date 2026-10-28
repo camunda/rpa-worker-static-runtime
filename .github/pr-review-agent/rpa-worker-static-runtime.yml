@@ -1,0 +1,50 @@
+# Team config for camunda/pr-review-agent (see its docs/configuration.md).
+# Read from the default branch: changes take effect once merged.
+schema_version: 1
+
+# Comment only, never approve.
+shadow_mode: true
+
+vault:
+  anthropic_api_key:
+    # TODO: the Anthropic key is not in Vault yet. The repo's other workflows
+    # read products/rpa/ci/*; the path below is a guess in that tree.
+    path: secret/data/products/rpa/ci/ai-pr-review
+    field: ANTHROPIC_API_KEY
+
+triggers:
+  opt_in_label: ai-review
+  skip_authors:
+    - renovate[bot]
+    - dependabot[bot]
+
+policy:
+  instructions: |
+    - This repo builds a PyInstaller bundle of Python + Robot Framework + the
+      Camunda RPA libraries (rpa-worker-static-runtime/build.gradle) and
+      publishes it as one JAR per platform to Artifactory for camunda/rpa-worker.
+    - Python dependencies live only in
+      rpa-worker-python-requirements/src/main/resources/python/requirements.txt.
+    - A library added to requirements.txt that is imported dynamically by Robot
+      needs a matching --collect-submodules or --hidden-import entry in
+      buildRuntime, or it is missing from the bundle at runtime.
+    - Build changes must keep all five platforms in .github/workflows/build.yml
+      (linux amd64/aarch64, win32 amd64, darwin amd64/aarch64) in sync.
+    - rpa-worker-static-runtime/test.robot is the only test: a --dryrun smoke
+      test that imports the Camunda library. It does not prove that every
+      bundled module loads.
+
+escalation:
+  # Changed paths that always need a human, whatever the agent says.
+  # `*` also matches `/`.
+  rules:
+    - reason: bundled python dependencies
+      paths: ["rpa-worker-python-requirements/*"]
+    - reason: runtime bundle and versioning
+      paths: ["*build.gradle", "settings.gradle", "gradle.properties", "buildSrc/*", "gradle/*", "gradlew*"]
+    - reason: signing/secrets/publishing
+      paths: [".github/*"]
+
+notifications:
+  # Tagged when the agent's session transcript could not be captured.
+  capture_alert_mentions: ["@camunda/ple"]
